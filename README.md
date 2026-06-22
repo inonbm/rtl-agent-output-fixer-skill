@@ -55,4 +55,3 @@ After installation, restart the agent and write in Hebrew:
 ```
 
 Expected result: Hebrew prose should be wrapped RTL, while commands and filenames remain LTR.
-# rtl-agent-output-fixer-skill

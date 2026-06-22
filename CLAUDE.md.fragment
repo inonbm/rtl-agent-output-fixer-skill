@@ -1,0 +1,11 @@
+
+## RTL Agent Output Defaults
+
+When the user writes in Hebrew, Arabic, Persian, or Yiddish, or asks for output in one of those languages, format final answers using these rules:
+
+- Wrap RTL prose in `<div dir="rtl" align="right">` containers when Markdown/HTML is supported.
+- Keep code blocks, shell commands, logs, JSON, YAML, diffs, file paths, branch names, and identifiers outside RTL containers and LTR.
+- Put inline LTR tokens in backticks.
+- Avoid Markdown tables for mixed RTL/LTR content unless truly useful.
+- Do not use invisible Unicode bidi controls by default.
+- Do not claim this changes the IDE/chat UI; it only formats the agent's own output.
