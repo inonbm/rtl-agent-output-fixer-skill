@@ -3,14 +3,73 @@ set -euo pipefail
 
 TARGET="${1:-all}"
 SKILL_NAME="rtl-agent-output-fixer"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SKILL_SRC="$SCRIPT_DIR/skills/$SKILL_NAME"
-CODEX_RULES_SRC="$SCRIPT_DIR/codex/AGENTS.md"
-CLAUDE_FRAGMENT_SRC="$SCRIPT_DIR/CLAUDE.md.fragment"
-GEMINI_FRAGMENT_SRC="$SCRIPT_DIR/GEMINI.md.fragment"
-
+REPO="inonbm/rtl-agent-output-fixer-skill"
+REF="${RTL_SKILL_REF:-v1.0.0}"
 START_MARK="<!-- rtl-agent-output-fixer:start -->"
 END_MARK="<!-- rtl-agent-output-fixer:end -->"
+TEMP_DIR=""
+
+cleanup() {
+  if [ -n "$TEMP_DIR" ] && [ -d "$TEMP_DIR" ]; then
+    rm -rf "$TEMP_DIR"
+  fi
+}
+trap cleanup EXIT
+
+script_dir() {
+  if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
+    cd "$(dirname "${BASH_SOURCE[0]}")" && pwd
+  else
+    pwd
+  fi
+}
+
+PACKAGE_DIR="$(script_dir)"
+
+bootstrap_package_if_needed() {
+  if [ -d "$PACKAGE_DIR/skills/$SKILL_NAME" ]; then
+    return 0
+  fi
+
+  if ! command -v curl >/dev/null 2>&1; then
+    echo "Error: curl is required for one-command remote installation." >&2
+    exit 1
+  fi
+  if ! command -v tar >/dev/null 2>&1; then
+    echo "Error: tar is required for one-command remote installation." >&2
+    exit 1
+  fi
+
+  TEMP_DIR="$(mktemp -d)"
+  echo "Downloading $REPO@$REF..."
+  curl -fsSL "https://github.com/$REPO/archive/refs/tags/$REF.tar.gz" | tar -xz -C "$TEMP_DIR" --strip-components=1
+  PACKAGE_DIR="$TEMP_DIR"
+
+  if [ ! -d "$PACKAGE_DIR/skills/$SKILL_NAME" ]; then
+    echo "Error: downloaded package does not contain skills/$SKILL_NAME." >&2
+    exit 1
+  fi
+}
+
+bootstrap_package_if_needed
+
+SKILL_SRC="$PACKAGE_DIR/skills/$SKILL_NAME"
+CODEX_RULES_SRC="$PACKAGE_DIR/codex/AGENTS.md"
+CLAUDE_FRAGMENT_SRC="$PACKAGE_DIR/CLAUDE.md.fragment"
+GEMINI_FRAGMENT_SRC="$PACKAGE_DIR/GEMINI.md.fragment"
+
+require_file() {
+  local file="$1"
+  if [ ! -f "$file" ]; then
+    echo "Error: missing required file: $file" >&2
+    exit 1
+  fi
+}
+
+require_file "$SKILL_SRC/SKILL.md"
+require_file "$CODEX_RULES_SRC"
+require_file "$CLAUDE_FRAGMENT_SRC"
+require_file "$GEMINI_FRAGMENT_SRC"
 
 copy_skill() {
   local dest_root="$1"
@@ -62,7 +121,7 @@ case "$TARGET" in
   antigravity|gemini) install_antigravity ;;
   all) install_claude; install_codex; install_antigravity ;;
   *)
-    echo "Usage: $0 [claude-code|codex|antigravity|all]" >&2
+    echo "Usage: install.sh [claude-code|codex|antigravity|all]" >&2
     exit 1
     ;;
 esac
