@@ -4,7 +4,7 @@ set -euo pipefail
 TARGET="${1:-all}"
 SKILL_NAME="rtl-agent-output-fixer"
 REPO="inonbm/rtl-agent-output-fixer-skill"
-REF="${RTL_SKILL_REF:-v1.0.0}"
+REF="${RTL_SKILL_REF:-main}"
 START_MARK="<!-- rtl-agent-output-fixer:start -->"
 END_MARK="<!-- rtl-agent-output-fixer:end -->"
 TEMP_DIR=""
@@ -42,7 +42,7 @@ bootstrap_package_if_needed() {
 
   TEMP_DIR="$(mktemp -d)"
   echo "Downloading $REPO@$REF..."
-  curl -fsSL "https://github.com/$REPO/archive/refs/tags/$REF.tar.gz" | tar -xz -C "$TEMP_DIR" --strip-components=1
+  curl -fsSL "https://github.com/$REPO/archive/$REF.tar.gz" | tar -xz -C "$TEMP_DIR" --strip-components=1
   PACKAGE_DIR="$TEMP_DIR"
 
   if [ ! -d "$PACKAGE_DIR/skills/$SKILL_NAME" ]; then
