@@ -7,7 +7,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $SkillName = 'rtl-agent-output-fixer'
 $Repo = 'inonbm/rtl-agent-output-fixer-skill'
-if ([string]::IsNullOrWhiteSpace($Ref)) { $Ref = 'v1.0.0' }
+if ([string]::IsNullOrWhiteSpace($Ref)) { $Ref = 'main' }
 $StartMark = '<!-- rtl-agent-output-fixer:start -->'
 $EndMark = '<!-- rtl-agent-output-fixer:end -->'
 $TempDir = $null
@@ -34,7 +34,7 @@ function Initialize-PackageIfNeeded {
   $ExtractPath = Join-Path $script:TempDir 'extract'
   New-Item -ItemType Directory -Force -Path $ExtractPath | Out-Null
 
-  $Url = "https://github.com/$Repo/archive/refs/tags/$Ref.zip"
+  $Url = "https://github.com/$Repo/archive/$Ref.zip"
   Write-Host "Downloading $Repo@$Ref..."
   Invoke-WebRequest -Uri $Url -OutFile $ZipPath -UseBasicParsing
   Expand-Archive -Path $ZipPath -DestinationPath $ExtractPath -Force
